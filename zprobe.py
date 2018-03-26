@@ -25,11 +25,11 @@ import serial
 import time
 
 zhigh_nl = 5.0 # travel to newline Y with this high
-zhigh = 1.0 # travel to next Y with this high
-zstart = 0.4
+zhigh = 3.0 # travel to next Y with this high
+zstart = 1.9
 zlow = -0.4
 zstep = -0.05
-repeat = 3 # repeat measurement N times, averaging
+repeat = 1 # repeat measurement N times, averaging
 
 #zstart = 0.5
 #zlow = -0.5
@@ -41,29 +41,32 @@ zdelay = 0.01 # s delay for small read endstop status
 serdelay = 0.2 # s serial delay to read response
 
 xmin=0
-xmax=95.001
+xmax=145.001
 xstep=5
 xoffset=1 # added to x
 
-ymax=95
+ymax=195
 ymin=-0.001
 ystep=-5
 yoffset=2 # added to y
 
 zoffset=-0.20 # added to z
+zoffset=0
 
 def gcode_html(printer, cmd):
   r = requests.get("http://" + printer + "/set?code=" + cmd)
   return r.text
 
 def gcode(printer, cmd):
+  print(">> ",cmd.encode('ascii'))
   r = printer.write(cmd.encode('ascii')+b"\r")
   time.sleep(serdelay)
   response = printer.read(1)
   response += printer.read(printer.inWaiting())
+  print("<< ", response)
   return response
 
-printer_port="/dev/ttyACM0"
+printer_port="/dev/ttyACM1"
 printer_fd=serial.Serial(printer_port, 115200, timeout=1)
 print(printer_fd.name)
 f = printer_fd
@@ -75,10 +78,10 @@ output_filename="zlevel.xyz"
 output_fd=open(os.path.expanduser(output_filename), "w")
 zlevel = output_fd
 
-if 1 == 1:
+if 0 == 1:
     gcode(f,"G90; absolute positioning")
     gcode(f,"M203 Z2; fast Z feedrate 2 mm/s (120 mm/s)")
-    gcode(f,"M140 S57; heat bed to 57'C")
+    gcode(f,"M140 S00; heat bed to 57'C")
     gcode(f,"G28 X Y; go home XY but not Z")
     gcode(f,"G0 X50 Y50; go to center of the bed")
     gcode(f,"G28 Z; go home Z now at center of the bed")
@@ -136,7 +139,7 @@ while n < repeat:
         zlevel.close()
     n += 1
 
-if 1 == 1: # leaving at center of hotbed
+if 0 == 1: # leaving at center of hotbed
     gcode(f,"G0 X50 Y50; go to center of the bed")
     gcode(f,"M140 S0; heat bed off")
     gcode(f,"G92;relative positioning")
